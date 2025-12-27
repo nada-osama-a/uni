@@ -6,6 +6,7 @@ int MatchS(char* s1, char* s2);
 char* Strstr_C(char* s1, char* s2);
 int validate_email(const char *email);
 int validate_phone(char* phone);
+double validate_amount();
 typedef struct{int day, mon , year;}date;
 date init_date(char *Date);
 date localTime();
@@ -55,6 +56,8 @@ void REPORT(account** accs);
 void QUIT(account** accs);
 void displayMenu();
 void MENU(account** accs);
+void DELETEMULTIPLE(account** accs);
+
 
 
 #endif // LIB_H_INCLUDED

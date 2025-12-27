@@ -1,8 +1,0 @@
-deposited 0.00, balance = 390001.73, 27-12-2025
-deposited 7.00, balance = 390008.73, 27-12-2025
-withdrawed 8200.00, balance = 381808.73, 27-12-2025
-transfered(sent) 9999.00, balance = 371809.73, 27-12-2025
-withdrawed 9999.99, balance = 361809.74, 27-12-2025
-deposited 1000.00, balance = 362809.74, 27-12-2025
-transfered(sent) 2000.00, balance = 360809.74, 27-12-2025
-deposited 10000.00, balance = 370809.74, 27-12-2025
