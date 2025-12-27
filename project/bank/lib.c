@@ -11,14 +11,19 @@
 .menu from depseek
 .et2kd mn 7war el 50,000 da 3ndy 3shan msh mot2kda eny 3mla 7sabo s7
 
-
+b7bkk
 */
 
 /*
 .sorting by name problem
 .transfer bug
+.getchar added in all switch cases of menu because on trial it was found that the app does not pause for the "enter"
+.transactions now are in one place above each other , and other organizational modifications are done
+.this is the library file , make sure to add the prototype of any newly added function in the lib.h file aw 2olili we ana hzbotha
 
+kol sna wenti tyba we ew3i tensi eni b7bk ....
 
+bmoot fiki
 */
 
 
@@ -42,9 +47,8 @@ int equal_string(char* s1 ,char* s2){
 
     else return 0;
 }
-//STRSTR FUNCTION WHICH HANDELS CASE SENSITIVITY FOR THE ADVANCED SEARCH
 
-int MatchS(char* s1, char* s2) {
+int MatchS(char* s1, char* s2) {//STRSTR FUNCTION WHICH HANDELS CASE SENSITIVITY FOR THE ADVANCED SEARCH
     int i = 0;
     while (s2[i] != '\0') {
         if (s1[i] == '\0') return 0;
@@ -313,22 +317,6 @@ void LOGIN(){
 
 }
 
-
-void SEARCH(account** accs){
-    char num[20];int i;
-    printf("ENTER THE NUMBER OF THE ACCOUNT: ");
-    scanf("%s",num);
-    for(i = 0;i<=numberOfAccounts;i++){
-         if(i<numberOfAccounts)
-            if(equal_string(num,accs[i]->acc_number))break;
-    }
-    if(i<numberOfAccounts){
-            print_acc(accs[i]);
-    }
-    else printf("\nTHE ACCOUNT NUMBER %s IS NOT FOUND!\n",num);
-
-}
-
 void SAVE(account** accs) {
     char choice;
     printf("\nSave all changes to file? (y/n): ");
@@ -363,38 +351,22 @@ void SAVE(account** accs) {
         printf("Changes not saved.\n");
 
 }
-void DELETE(account** accs){
-    int i = searchNum(accs);int j;
 
-    if(i<numberOfAccounts){
-        if(accs[i]->balance == 0){
-                destruct_acc(accs[i]);numberOfAccounts--;
-                for(j=0;j<numberOfAccounts-i;j++){
-                    accs[i+j]=accs[i+j+1];
-                }
 
-        }
-        else printf("\nTHE ACCOUNT CANNOT BE DELETED , BALANCE = %.2f \n",accs[i]->balance);
+void SEARCH(account** accs){
+    char num[20];int i;
+    printf("ENTER THE NUMBER OF THE ACCOUNT: ");
+    scanf("%s",num);
+    for(i = 0;i<=numberOfAccounts;i++){
+         if(i<numberOfAccounts)
+            if(equal_string(num,accs[i]->acc_number))break;
     }
-    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
-}
-
-
-void CHANGE_STATUS(account** accs){
-    int i = searchNum(accs);char x = 0;
-
     if(i<numberOfAccounts){
-            printf("\nThe account status is %s , Are you sure want to change the current status? [y/n]:",statusOfAccount[accs[i]->status]);
-            getchar();
-            scanf("%c",&x);
-            if(x == 'y' || x == 'Y'){(accs[i]->status)=((accs[i]->status)+1)%2;printf("your status now is %s\n\n",statusOfAccount[accs[i]->status]);SAVE(accs);}
-            if(x != 'y' && x != 'n' && x != 'Y' && x != 'N' ){printf("UNDEFINED CHOICE. ");printf("your status now is %s\n\n",statusOfAccount[accs[i]->status]);}
-
+            print_acc(accs[i]);
     }
-    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
+    else printf("\nTHE ACCOUNT NUMBER %s IS NOT FOUND!\n",num);
 
 }
-
 
 void ADVANCED_SEARCH(account** accs) {
     char keyword[60];
@@ -419,6 +391,7 @@ void ADVANCED_SEARCH(account** accs) {
         printf("\nNo matches found for keyword: %s\n", keyword);
     }
 }
+
 void ADD(account** accs) {
     int i, checkNum;
     char num[20];
@@ -531,6 +504,23 @@ void ADD(account** accs) {
 
 }
 
+void DELETE(account** accs){
+    int i = searchNum(accs);int j;
+
+    if(i<numberOfAccounts){
+        if(accs[i]->balance == 0){
+                destruct_acc(accs[i]);numberOfAccounts--;
+                for(j=0;j<numberOfAccounts-i;j++){
+                    accs[i+j]=accs[i+j+1];
+                }
+
+        }
+        else printf("\nTHE ACCOUNT CANNOT BE DELETED , BALANCE = %.2f \n",accs[i]->balance);
+    }
+    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
+}
+
+
 void MODIFY(account** accs) {
     int i = searchNum(accs);
 
@@ -599,96 +589,23 @@ void MODIFY(account** accs) {
     SAVE(accs);
     }
 }
-// SORTING HELPER FUNCTIONS
-void sortByName(account** accs, int n) { //PROBLEM WITH SORTING
-    for(int i = 0; i < n-1; i++) {
-        for(int j = 0; j < n-i-1; j++) {
-            if(strcmp(accs[j]->name, accs[j+1]->name) > 0) {
-                account* temp = accs[j];
-                accs[j] = accs[j+1];
-                accs[j+1] = temp;
-            }
-        }
-    }
-}
 
-void sortByBalance(account** accs, int n) {
-    for(int i = 0; i < n-1; i++) {
-        for(int j = 0; j < n-i-1; j++) {
-            if(accs[j]->balance < accs[j+1]->balance) {
-                account* temp = accs[j];
-                accs[j] = accs[j+1];
-                accs[j+1] = temp;
-            }
-        }
-    }
-}
+void CHANGE_STATUS(account** accs){
+    int i = searchNum(accs);char x = 0;
 
-void sortByDate(account** accs, int n) {
-    for(int i = 0; i < n-1; i++) {
-        for(int j = 0; j < n-i-1; j++) {
-            // Compare years, then months
-            if(accs[j]->dateOpened.year > accs[j+1]->dateOpened.year ||
-               (accs[j]->dateOpened.year == accs[j+1]->dateOpened.year &&
-                accs[j]->dateOpened.mon > accs[j+1]->dateOpened.mon)) {
-                account* temp = accs[j];
-                accs[j] = accs[j+1];
-                accs[j+1] = temp;
-            }
-        }
+    if(i<numberOfAccounts){
+            printf("\nThe account status is %s , Are you sure want to change the current status? [y/n]:",statusOfAccount[accs[i]->status]);
+            getchar();
+            scanf("%c",&x);
+            if(x == 'y' || x == 'Y'){(accs[i]->status)=((accs[i]->status)+1)%2;printf("your status now is %s\n\n",statusOfAccount[accs[i]->status]);SAVE(accs);}
+            if(x != 'y' && x != 'n' && x != 'Y' && x != 'N' ){printf("UNDEFINED CHOICE. ");printf("your status now is %s\n\n",statusOfAccount[accs[i]->status]);}
+
     }
+    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
+
 }
 
 
-void PRINT(account** accs) {
-    if(numberOfAccounts == 0) {
-        printf("No accounts to display!\n");
-        return;
-    }
-    printf("========================================\n");
-    printf("|       Sort Accounts By                |\n");
-    printf("========================================\n");
-    printf("|     1. Name (A-Z)                     |\n");
-    printf("|     2. Balance (highest to lowest)    |\n");
-    printf("|     3. Date Opened (oldest to newest) |\n");
-    printf("========================================\n");
-    printf("      Enter choice: \n");
-
-    int choice;
-    scanf("%d", &choice);
-
-    // Create temporary array for sorting
-    account** temp_accs = malloc(numberOfAccounts * sizeof(account*));
-    for(int i = 0; i < numberOfAccounts; i++) {
-        temp_accs[i] = accs[i];
-    }
-
-    switch(choice) {
-        case 1:
-            sortByName(temp_accs, numberOfAccounts);
-            printf("\nAccounts Sorted by Name \n");
-            break;
-        case 2:
-            sortByBalance(temp_accs, numberOfAccounts);
-            printf("\nAccounts Sorted by Balance\n");
-            break;
-        case 3:
-            sortByDate(temp_accs, numberOfAccounts);
-            printf("\nAccounts Sorted by Date Opened \n");
-            break;
-        default:
-            printf("Invalid choice!\n");
-            free(temp_accs);
-            return;
-    }
-
-    // Print all accounts
-    for(int i = 0; i < numberOfAccounts; i++) {
-        print_acc(temp_accs[i]);
-    }
-
-    free(temp_accs);
-}
 void DAILYLIMIT(account** accs) {
     int i = searchNum(accs);
 
@@ -811,6 +728,99 @@ void TRANSFER(account** accs) {
     }
 
 }
+
+
+// SORTING HELPER FUNCTIONS
+void sortByName(account** accs, int n) { //PROBLEM WITH SORTING
+    for(int i = 0; i < n-1; i++) {
+        for(int j = 0; j < n-i-1; j++) {
+            if(strcmp(accs[j]->name, accs[j+1]->name) > 0) {
+                account* temp = accs[j];
+                accs[j] = accs[j+1];
+                accs[j+1] = temp;
+            }
+        }
+    }
+}
+
+void sortByBalance(account** accs, int n) {
+    for(int i = 0; i < n-1; i++) {
+        for(int j = 0; j < n-i-1; j++) {
+            if(accs[j]->balance < accs[j+1]->balance) {
+                account* temp = accs[j];
+                accs[j] = accs[j+1];
+                accs[j+1] = temp;
+            }
+        }
+    }
+}
+
+void sortByDate(account** accs, int n) {
+    for(int i = 0; i < n-1; i++) {
+        for(int j = 0; j < n-i-1; j++) {
+            // Compare years, then months
+            if(accs[j]->dateOpened.year > accs[j+1]->dateOpened.year ||
+               (accs[j]->dateOpened.year == accs[j+1]->dateOpened.year &&
+                accs[j]->dateOpened.mon > accs[j+1]->dateOpened.mon)) {
+                account* temp = accs[j];
+                accs[j] = accs[j+1];
+                accs[j+1] = temp;
+            }
+        }
+    }
+}
+
+
+void PRINT(account** accs) {
+    if(numberOfAccounts == 0) {
+        printf("No accounts to display!\n");
+        return;
+    }
+    printf("========================================\n");
+    printf("|       Sort Accounts By                |\n");
+    printf("========================================\n");
+    printf("|     1. Name (A-Z)                     |\n");
+    printf("|     2. Balance (highest to lowest)    |\n");
+    printf("|     3. Date Opened (oldest to newest) |\n");
+    printf("========================================\n");
+    printf("      Enter choice: \n");
+
+    int choice;
+    scanf("%d", &choice);
+
+    // Create temporary array for sorting
+    account** temp_accs = malloc(numberOfAccounts * sizeof(account*));
+    for(int i = 0; i < numberOfAccounts; i++) {
+        temp_accs[i] = accs[i];
+    }
+
+    switch(choice) {
+        case 1:
+            sortByName(temp_accs, numberOfAccounts);
+            printf("\nAccounts Sorted by Name \n");
+            break;
+        case 2:
+            sortByBalance(temp_accs, numberOfAccounts);
+            printf("\nAccounts Sorted by Balance\n");
+            break;
+        case 3:
+            sortByDate(temp_accs, numberOfAccounts);
+            printf("\nAccounts Sorted by Date Opened \n");
+            break;
+        default:
+            printf("Invalid choice!\n");
+            free(temp_accs);
+            return;
+    }
+
+    // Print all accounts
+    for(int i = 0; i < numberOfAccounts; i++) {
+        print_acc(temp_accs[i]);
+    }
+
+    free(temp_accs);
+}
+
 
 void REPORT(account** accs){
     int i = searchNum(accs) , j;
