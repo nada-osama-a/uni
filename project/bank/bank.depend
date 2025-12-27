@@ -1,0 +1,20 @@
+# depslib dependency file v1.0
+1766826437 source:c:\users\nadah\onedrive\desktop\project\bank\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	<ctype.h>
+
+1766846943 source:f:\project\project\bank\main.c
+	"lib.h"
+
+1766846910 source:f:\project\project\bank\lib.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	<ctype.h>
+
+1766846973 f:\project\project\bank\lib.h
+

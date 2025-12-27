@@ -1,0 +1,4 @@
+deposited 44.00, balance = 1031.00, 27-12-2025
+transfered(received) 9999.00, balance = 11030.00, 27-12-2025
+transfered(received) 2000.00, balance = 13030.00, 27-12-2025
+withdrawed 1312.00, balance = 11718.00, 27-12-2025
