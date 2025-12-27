@@ -845,9 +845,9 @@ void REPORT(account** accs){
                 printf("|                             REPORT                          |\n");
                 printf("===============================================================\n");
                 for(j=count-1;j>=count-5;j--){
-                    printf("- %s |\n",lines[j]);
+                    printf("- %s \n",lines[j]);
             }
-                printf("========================================\n");
+                printf("===============================================================\n");
             }
             else {
                 printf("\n================================================================\n");
@@ -889,7 +889,7 @@ void displayMenu() {
     printf("|    14. DELETE muliple                     |\n");
     printf("|    15. QUIT                               |\n");
     printf(" ============================================\n");
-    printf("\n Enter your choice (1-14): ");
+    printf("\n Enter your choice (1-15): ");
 }
 
 void MENU(account** accs){
