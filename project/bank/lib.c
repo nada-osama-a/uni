@@ -28,19 +28,23 @@ char* months[13] = {"","January","February","March","April","May","June","July",
 char* statusOfAccount[2]= {"inactive","active"};
 
 // COLORED PRINT FUNCTIONS
-void printSuccess(char* message) {
+void printSuccess(char* message)
+{
     printf(GREEN "%s" RESET, message);
 }
 
-void printError(char* message) {
+void printError(char* message)
+{
     printf(RED "%s" RESET, message);
 }
 
-void printWarning(char* message) {
+void printWarning(char* message)
+{
     printf(YELLOW "%s" RESET, message);
 }
 
-void printInfo(char* message) {
+void printInfo(char* message)
+{
     printf(CYAN "%s" RESET, message);
 }
 
@@ -130,54 +134,60 @@ int validate_phone(char* phone)  //validate phone num
 
     return 1;
 }
-double validate_amount()
+double validate_amount(void)
 {
     char input[100];
-    char *endptr;
     double amount;
-
+    int dotCount;
+    int valid;
+    while(getchar() != '\n');
     while (1)
     {
-        printf(CYAN "Enter amount: $" RESET);
+        printf(CYAN "Enter amount: " RESET);
+
+        if (!fgets(input, sizeof(input), stdin))
+        {
+            printf(RED "Input error.\n" RESET);
+            continue;
+        }
+
         input[strcspn(input, "\n")] = '\0';
+        if (input[0] == '\0')
+            continue;
 
-        if (fgets(input, sizeof(input), stdin) == NULL) {
-            printf(RED "Input error. Please try again.\n" RESET);
+        dotCount = 0;
+        valid = 1;
+
+        for (int i = 0; input[i] != '\0'; i++)
+        {
+            if (input[i] == '.')
+            {
+                dotCount++;
+                if (dotCount > 1)
+                {
+                    valid = 0;
+                    break;
+                }
+            }
+            else if (!isdigit((unsigned char)input[i]))
+            {
+                valid = 0;
+                break;
+            }
+        }
+        if (!valid)
+        {
+            printf(RED "Invalid number format.\n" RESET);
             continue;
         }
-
-        // Remove newline
-        input[strcspn(input, "\n")] = '\0';
-
-        // Handle empty input (user pressed Enter)
-        if (input[0] == '\0') {
-            continue;
-        }
-
-        // Convert to double
-        amount = strtod(input, &endptr);
-
-        // Check for conversion errors
-        if (endptr == input) {
-            printf(RED "Invalid number: '%s'\n" RESET, input);
-            continue;
-        }
-
-        // Check for trailing non-numeric characters
-        if (*endptr != '\0') {
-            printf(RED "Invalid characters: '%s'\n" RESET, endptr);
-            continue;
-        }
-
-        // Check amount range
-        if (amount <= 0) {
+        amount = atof(input);
+        if (amount <= 0)
+        {
             printf(RED "Amount must be greater than zero.\n" RESET);
             continue;
         }
-        break;
+        return amount;
     }
-
-    return amount;
 }
 
 //DATE STRUCT
@@ -899,24 +909,28 @@ void TRANSFER(account** accs)
         printf(CYAN "\nSENDER ACCOUNT:\n" RESET);
         i = searchNum(accs);
 
-        if(i >= numberOfAccounts) {
+        if(i >= numberOfAccounts)
+        {
             printError("Sender account not found!\n");
             validS = 0;
             continue;
         }
 
-        if(!accs[i]->status) {
+        if(!accs[i]->status)
+        {
             printError("Sender account is INACTIVE!\n");
             validS = 0;
         }
 
-        if(accs[i]->wlimit <= 0) {
+        if(accs[i]->wlimit <= 0)
+        {
             printError("Daily withdrawal limit reached!\n");
             printf("Remaining: $%.2f\n", accs[i]->wlimit);
             validS = 0;
         }
 
-    } while(!validS);
+    }
+    while(!validS);
 
     // Get receiver account
     do
@@ -924,21 +938,25 @@ void TRANSFER(account** accs)
         validR = 1;
         printf(CYAN "\nRECEIVER ACCOUNT:\n" RESET);
         j = searchNum(accs);
-        if(j >= numberOfAccounts) {
+        if(j >= numberOfAccounts)
+        {
             printError("Receiver account not found!\n");
             validR = 0;
             continue;
         }
-        if(!accs[j]->status) {
+        if(!accs[j]->status)
+        {
             printError("Receiver account is INACTIVE!\n");
             validR = 0;
         }
-        if(i == j) {
+        if(i == j)
+        {
             printError("Cannot transfer to same account!\n");
             validR = 0;
         }
 
-    } while(!validR);
+    }
+    while(!validR);
 
     // Show balances
     printf("\nCurrent balances:\n");
@@ -947,26 +965,30 @@ void TRANSFER(account** accs)
     printf("Daily limit remaining: $%.2f\n", accs[i]->wlimit);
 
     // Get transfer amount
-        printf(CYAN "\nEnter transfer amount: $" RESET);
+    printf(CYAN "\nEnter transfer amount: $" RESET);
+    amount = validate_amount();
+
+    if(amount > 10000.0)
+    {
+        printError("Max $10,000 per transaction!\n");
         amount = validate_amount();
 
-        if(amount > 10000.0) {
-            printError("Max $10,000 per transaction!\n");
-             amount = validate_amount();
+    }
 
-        }
+    else if (amount > accs[i]->balance)
+    {
+        printError("Insufficient balance!\n");
+        printf("Available: $%.2f\n", accs[i]->balance);
+        amount = validate_amount();
 
-        else if (amount > accs[i]->balance) {
-            printError("Insufficient balance!\n");
-            printf("Available: $%.2f\n", accs[i]->balance);
-            amount = validate_amount();
+    }
 
-        }
-
-        else if(amount > accs[i]->wlimit) {
-            printError("Exceeds daily limit!\n");
-            printf("Remaining: $%.2f\n", accs[i]->wlimit);
-            amount = validate_amount();}
+    else if(amount > accs[i]->wlimit)
+    {
+        printError("Exceeds daily limit!\n");
+        printf("Remaining: $%.2f\n", accs[i]->wlimit);
+        amount = validate_amount();
+    }
 
     // Perform transfer
     accs[i]->balance -= amount;
@@ -987,27 +1009,33 @@ void TRANSFER(account** accs)
 }
 // SORTING HELPER FUNCTIONS
 
-void sortByName(account** accounts, int size) {
+void sortByName(account** accounts, int size)
+{
 
-    for (int i = 0; i < size - 1; i++) {
-        for (int j = 0; j < size - i - 1; j++) {
+    for (int i = 0; i < size - 1; i++)
+    {
+        for (int j = 0; j < size - i - 1; j++)
+        {
             char* name1 = accounts[j]->name;
             char* name2 = accounts[j + 1]->name;
             int k = 0;
 
             // Compare character by character (case-insensitive)
-            while (name1[k] && name2[k]) {
+            while (name1[k] && name2[k])
+            {
                 char c1 = tolower((unsigned char)name1[k]);
                 char c2 = tolower((unsigned char)name2[k]);
 
-                if (c1 > c2) {
+                if (c1 > c2)
+                {
                     // Swap needed - name1 comes after name2
                     account* temp = accounts[j];
                     accounts[j] = accounts[j + 1];
                     accounts[j + 1] = temp;
                     break;
                 }
-                else if (c1 < c2) {
+                else if (c1 < c2)
+                {
 
                     break;
                 }
@@ -1015,11 +1043,13 @@ void sortByName(account** accounts, int size) {
             }
 
             // If all compared characters were equal, check lengths
-            if (name1[k] == 0 && name2[k] != 0 && name1[k] != name2[k]) {
+            if (name1[k] == 0 && name2[k] != 0 && name1[k] != name2[k])
+            {
                 // name1 ended but name2 continues - no swap needed
                 continue;
             }
-            else if (name1[k] != 0 && name2[k] == 0) {
+            else if (name1[k] != 0 && name2[k] == 0)
+            {
                 // name2 ended but name1 continues - swap needed
                 account* temp = accounts[j];
                 accounts[j] = accounts[j + 1];
@@ -1132,7 +1162,8 @@ void REPORT(account** accs)
     char buffer[200];
     int count = 0;
 
-    if(i<numberOfAccounts){
+    if(i<numberOfAccounts)
+    {
         FILE* f=fopen(accs[i]->filetrans,"r");
         if(!f)printf(YELLOW "THE ACCOUNT HAS NO TRANSACTIONS!\n" RESET);
 
@@ -1189,14 +1220,12 @@ void DELETEMULTIPLE(account** accs)
         char date_input[8];
         int year, month;
 
-        printf(CYAN "Enter date (YYYY-MM): " RESET);
+        printf(CYAN "Enter date (MM-YYYY): " RESET);
         scanf("%7s", date_input);
 
-        // Parse date
-        char* token = strtok(date_input, "-");
-        year = atoi(token);
-        token = strtok(NULL, "-");
-        month = atoi(token);
+        date target_date = init_date(date_input);
+        year = target_date.year;
+        month = target_date.mon;
 
         // First pass: count and store accounts to delete
         int total_count = 0;
@@ -1217,6 +1246,9 @@ void DELETEMULTIPLE(account** accs)
                        statusOfAccount[accs[i]->status],
                        accs[i]->balance);
                 printf("   Email: %s\n", accs[i]->address);
+                printf("   Date opened: %s %d\n",
+                       months[accs[i]->dateOpened.mon],
+                       accs[i]->dateOpened.year);
                 printf(YELLOW "--------------------------------\n" RESET);
             }
         }
@@ -1226,19 +1258,15 @@ void DELETEMULTIPLE(account** accs)
             printf(RED "No accounts found from %d-%02d\n" RESET, year, month);
             return;
         }
-
         // Ask for confirmation
         char confirm;
         if(has_active)
         {
-            printWarning("\nWARNING: Some accounts are ACTIVE!\n");
+            printWarning("\n WARNING: Some accounts are ACTIVE!\n");
             printf(YELLOW "Delete these %d account(s)? (y/n): " RESET, total_count);
         }
         else
-        {
             printf(YELLOW "\nDelete these %d account(s)? (y/n): " RESET, total_count);
-        }
-
         scanf(" %c", &confirm);
 
         if(confirm != 'y' && confirm != 'Y')
@@ -1256,21 +1284,21 @@ void DELETEMULTIPLE(account** accs)
             {
                 printf(RED "Deleting: %s - %s\n" RESET, accs[i]->acc_number, accs[i]->name);
                 destruct_acc(accs[i]);
-
                 // Shift remaining accounts
                 for(int j = i; j < numberOfAccounts - 1; j++)
-                {
                     accs[j] = accs[j + 1];
-                }
 
                 numberOfAccounts--;
                 deleted_count++;
-                i--; // Adjust index
+                i--;
             }
         }
 
-        printSuccess("Deleted %d account(s)\n");
-        SAVE(accs);
+        if(deleted_count > 0)
+        {
+            printSuccess("Deleted %d account(s)\n");
+            SAVE(accs);
+        }
     }
     else if(option == 2) // Delete inactive accounts
     {
@@ -1283,16 +1311,19 @@ void DELETEMULTIPLE(account** accs)
         // First pass: show accounts to delete
         for(int i = 0; i < numberOfAccounts; i++)
         {
-            if(accs[i]->status == 0 && accs[i]->balance == 0)
+            if(accs[i]->status == 0 && accs[i]->balance == 0.0)
             {
-                int months_since = (today.year - accs[i]->dateOpened.year) * 12
-                                 + (today.mon - accs[i]->dateOpened.mon);
+                int days_since_opening = 0;
+                int year_diff = today.year - accs[i]->dateOpened.year;
+                int month_diff = today.mon - accs[i]->dateOpened.mon;
+                int total_months = year_diff * 12 + month_diff;
+                int approx_days = total_months * 30;
 
-                if(months_since >= 3)
+                if(approx_days > 90)
                 {
                     total_count++;
                     printf("%d. %s - %s\n", total_count, accs[i]->acc_number, accs[i]->name);
-                    printf("   Inactive for: ~%d months\n", months_since);
+                    printf("   Inactive for: ~%d days (%d months)\n", approx_days, total_months);
                     printf("   Email: %s\n", accs[i]->address);
                     printf("   Phone: %s\n", accs[i]->phone);
                     printf("   Date opened: %s %d\n",
@@ -1305,11 +1336,9 @@ void DELETEMULTIPLE(account** accs)
 
         if(total_count == 0)
         {
-            printf(GREEN "No inactive accounts found (>90 days with zero balance)\n" RESET);
+            printf(GREEN " No inactive accounts found (>90 days with zero balance)\n" RESET);
             return;
         }
-
-        // Ask for confirmation
         char confirm;
         printf(YELLOW "\nDelete these %d inactive account(s)? (y/n): " RESET, total_count);
         scanf(" %c", &confirm);
@@ -1325,36 +1354,41 @@ void DELETEMULTIPLE(account** accs)
 
         for(int i = 0; i < numberOfAccounts; i++)
         {
-            if(accs[i]->status == 0 && accs[i]->balance == 0)
+            if(accs[i]->status == 0 && accs[i]->balance == 0.0)
             {
-                int months_since = (today.year - accs[i]->dateOpened.year) * 12
-                                 + (today.mon - accs[i]->dateOpened.mon);
+                // Calculate days difference again
+                int year_diff = today.year - accs[i]->dateOpened.year;
+                int month_diff = today.mon - accs[i]->dateOpened.mon;
+                int total_months = year_diff * 12 + month_diff;
+                int approx_days = total_months * 30;
 
-                if(months_since >= 3)
+                if(approx_days > 90)
                 {
                     printf(RED "Deleting: %s - %s\n" RESET, accs[i]->acc_number, accs[i]->name);
                     destruct_acc(accs[i]);
-
-                    // Shift remaining accounts
                     for(int j = i; j < numberOfAccounts - 1; j++)
                         accs[j] = accs[j + 1];
-
                     numberOfAccounts--;
                     deleted_count++;
-                    i--; // Adjust index
+                    i--;
                 }
             }
         }
 
-        printSuccess("Deleted %d inactive account(s)\n");
-        SAVE(accs);
+        if(deleted_count > 0)
+        {
+            printSuccess("Deleted %d inactive account(s)\n");
+            SAVE(accs);
+        }
     }
     else
     {
         printError("Invalid option\n");
         printf(YELLOW "\nPress Enter to return to main menu..." RESET);
+        getchar();
     }
 }
+
 void QUIT(account** accs)
 {
     printf(BOLD BLUE "\n===========================================\n" RESET);
