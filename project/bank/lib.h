@@ -1,6 +1,9 @@
 #ifndef LIB_H_INCLUDED
 #define LIB_H_INCLUDED
-
+void printSuccess(char* message) ;
+void printError(char* message);
+void printWarning(char* message) ;
+void printInfo(char* message);
 int equal_string(char* s1 ,char* s2);
 int MatchS(char* s1, char* s2);
 char* Strstr_C(char* s1, char* s2);

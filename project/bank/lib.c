@@ -11,12 +11,38 @@
 .added all new to lib.h
 */
 
+// ANSI COLOR CODES
+#define RESET   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+#define BOLD    "\033[1m"
 
 //GLOBALS
 int loggedin = 0;
 int numberOfAccounts = 0;
 char* months[13] = {"","January","February","March","April","May","June","July","August","September","October","November","December"};
 char* statusOfAccount[2]= {"inactive","active"};
+
+// COLORED PRINT FUNCTIONS
+void printSuccess(char* message) {
+    printf(GREEN "%s" RESET, message);
+}
+
+void printError(char* message) {
+    printf(RED "%s" RESET, message);
+}
+
+void printWarning(char* message) {
+    printf(YELLOW "%s" RESET, message);
+}
+
+void printInfo(char* message) {
+    printf(CYAN "%s" RESET, message);
+}
 
 //FUNCTIONS USED ALOT
 int equal_string(char* s1,char* s2)
@@ -88,7 +114,7 @@ int validate_phone(char* phone)  //validate phone num
     // Check length
     if(strlen(phone) != 11)
     {
-        printf("Phone number must be exactly 11 digits.\n");
+        printf(RED "Phone number must be exactly 11 digits.\n" RESET);
         return 0;
     }
 
@@ -97,7 +123,7 @@ int validate_phone(char* phone)  //validate phone num
     {
         if(!isdigit(phone[i]))
         {
-            printf("Phone number must contain only digits.\n");
+            printf(RED "Phone number must contain only digits.\n" RESET);
             return 0;
         }
     }
@@ -112,10 +138,11 @@ double validate_amount()
 
     while (1)
     {
-        printf("Enter amount: $");
+        printf(CYAN "Enter amount: $" RESET);
+        input[strcspn(input, "\n")] = '\0';
 
         if (fgets(input, sizeof(input), stdin) == NULL) {
-            printf("Input error. Please try again.\n");
+            printf(RED "Input error. Please try again.\n" RESET);
             continue;
         }
 
@@ -124,7 +151,6 @@ double validate_amount()
 
         // Handle empty input (user pressed Enter)
         if (input[0] == '\0') {
-            printf("No amount entered. Please enter an amount.\n");
             continue;
         }
 
@@ -133,19 +159,19 @@ double validate_amount()
 
         // Check for conversion errors
         if (endptr == input) {
-            printf("Invalid number: '%s'\n", input);
+            printf(RED "Invalid number: '%s'\n" RESET, input);
             continue;
         }
 
         // Check for trailing non-numeric characters
         if (*endptr != '\0') {
-            printf("Invalid characters: '%s'\n", endptr);
+            printf(RED "Invalid characters: '%s'\n" RESET, endptr);
             continue;
         }
 
         // Check amount range
         if (amount <= 0) {
-            printf("Amount must be greater than zero.\n");
+            printf(RED "Amount must be greater than zero.\n" RESET);
             continue;
         }
         break;
@@ -238,7 +264,6 @@ double wlim(account* acc) // (returning the withdrawal limits of an account --->
         token = strtok(NULL,",");
         *(token+11) = '\0';
         d = init_date_trans(token);
-        //printf("%f      %d-%d-%d\n",w,d.day,d.mon,d.year);
         if(d.day==localTime().day && d.mon==localTime().mon && d.year==localTime().year)wl+=w;
 
     }
@@ -278,7 +303,19 @@ account* init_acc(char* num, char* name, char* address, char* balance, char* pho
 
 void print_acc(account* acc) //PRINTING INFO ACCORDING TO THE PDF FORMAT
 {
-    printf("\nAccount Number : %s\nName : %s\nE-mail : %s\nBalance : %.2f\nMobile : %s\nDate Opened : %s %d\nStatus : %s\n",acc->acc_number,acc->name,acc->address,acc->balance,acc->phone,months[acc->dateOpened.mon],acc->dateOpened.year,statusOfAccount[acc->status]);
+    printf("\n" BOLD CYAN "=========================================\n" RESET);
+    printf(CYAN "Account Number : " GREEN "%s\n" RESET, acc->acc_number);
+    printf(CYAN "Name : " GREEN "%s\n" RESET, acc->name);
+    printf(CYAN "E-mail : " GREEN "%s\n" RESET, acc->address);
+    printf(CYAN "Balance : " GREEN "$%.2f\n" RESET, acc->balance);
+    printf(CYAN "Mobile : " GREEN "%s\n" RESET, acc->phone);
+    printf(CYAN "Date Opened : " GREEN "%s %d\n" RESET, months[acc->dateOpened.mon], acc->dateOpened.year);
+    printf(CYAN "Status : " RESET);
+    if(acc->status)
+        printSuccess("active\n");
+    else
+        printError("inactive\n");
+    printf(BOLD CYAN "=========================================\n" RESET);
 }
 
 void destruct_acc(account *acc) //DESTROYING THE ACC IF NEEDED TO BE DELETED(DELETED IN account.txt TEXT FILE TOO)
@@ -303,7 +340,7 @@ int searchNum(account** accs)
 {
     char num[20];
     int i;
-    printf("ENTER THE NUMBER OF AN ACTIVE ACCOUNT: ");
+    printf(YELLOW "ENTER THE NUMBER OF AN ACTIVE ACCOUNT: " RESET);
     scanf("%s",num);
     for(i = 0; i<=numberOfAccounts; i++)
     {
@@ -316,7 +353,7 @@ int searchNum(account** accs)
 //LOADING INFO OF ALL ACCOUNTS FROM THE accounts.txt FILE
 account** LOAD()
 {
-    account** accs = malloc(100*sizeof(account*));//.!!!.EDITED.!!! WAS account** accs = malloc(100*sizeof(account));
+    account** accs = malloc(100*sizeof(account*));
     char buffer[200];
     char acc_number[20];
     char name[50];
@@ -354,6 +391,7 @@ account** LOAD()
             numberOfAccounts++;
         }
         fclose(f);
+        printSuccess("Accounts loaded successfully!\n");
         return accs;
     }
 }
@@ -368,11 +406,15 @@ void LOGIN()
     char username[64] = "";
     char password[64] = "";
 
+    printf("\n" BOLD BLUE "===========================================\n" RESET);
+    printf(BOLD BLUE "             LOGIN PORTAL                    \n" RESET);
+    printf(BOLD BLUE "===========================================\n" RESET);
+
     while(!loggedin)
     {
-        printf("enter the username: ");
+        printf(CYAN "enter the username: " RESET);
         scanf("%s",username);
-        printf("enter the password: ");
+        printf(CYAN "enter the password: " RESET);
         scanf("%s",password);
 
         FILE* f = fopen("users.txt","r");
@@ -390,15 +432,20 @@ void LOGIN()
             else loggedin = 0;
         }
         fclose(f);
-        if(!loggedin)printf("INCORRECT USERNAME OR PASSWORD ! RETRY TO LOGIN\n");
+        if(!loggedin)
+        {
+            printError("INCORRECT USERNAME OR PASSWORD ! RETRY TO LOGIN\n");
+            printf("\n");
+        }
     }
+    printSuccess("\nLogin successful! Welcome to Banking System.\n");
 
 }
 
 void SAVE(account** accs)
 {
     char choice;
-    printf("\nSave all changes to file? (y/n): ");
+    printf(YELLOW "\nSave all changes to file? (y/n): " RESET);
     scanf(" %c", &choice);
 
     if(choice == 'y' || choice == 'Y')
@@ -406,7 +453,7 @@ void SAVE(account** accs)
         FILE* file = fopen("accounts.txt", "w");
         if(!file)
         {
-            printf("Error: Cannot open accounts.txt for writing!\n");
+            printError("Error: Cannot open accounts.txt for writing!\n");
             return;
         }
 
@@ -422,16 +469,17 @@ void SAVE(account** accs)
                     accs[i]->dateOpened.year,
                     statusOfAccount[accs[i]->status]);
 
-            // Add newline after each account except the last one
             if(i < numberOfAccounts - 1)
                 fprintf(file, "\n");
         }
 
         fclose(file);
-        printf("\n All %d accounts saved to accounts.txt\n", numberOfAccounts);
+        printSuccess("All accounts saved to accounts.txt\n");
     }
     else
-        printf("Changes not saved.\n");
+    {
+        printWarning("Changes not saved.\n");
+    }
 
 }
 
@@ -440,7 +488,7 @@ void SEARCH(account** accs)
 {
     char num[20];
     int i;
-    printf("ENTER THE NUMBER OF THE ACCOUNT: ");
+    printf(YELLOW "ENTER THE NUMBER OF THE ACCOUNT: " RESET);
     scanf("%s",num);
     for(i = 0; i<=numberOfAccounts; i++)
     {
@@ -451,7 +499,7 @@ void SEARCH(account** accs)
     {
         print_acc(accs[i]);
     }
-    else printf("\nTHE ACCOUNT NUMBER %s IS NOT FOUND!\n",num);
+    else printError("THE ACCOUNT NUMBER IS NOT FOUND!\n");
 
 }
 
@@ -460,7 +508,7 @@ void ADVANCED_SEARCH(account** accs)
     char keyword[60];
     int found = 0;
 
-    printf("Enter keyword: ");
+    printf(CYAN "Enter keyword: " RESET);
     scanf("%s", keyword);
     printf("\nSearch results:\n", keyword);
 
@@ -479,7 +527,7 @@ void ADVANCED_SEARCH(account** accs)
 
     if(!found)
     {
-        printf("\nNo matches found for keyword: %s\n", keyword);
+        printError("No matches found for keyword.\n");
     }
 }
 
@@ -494,16 +542,19 @@ void ADD(account** accs)
     double balance;
     char date_str[20];
 
+    printf(BOLD BLUE "\nADD NEW ACCOUNT\n" RESET);
+    printf(BLUE "================\n" RESET);
+
     do
     {
         checkNum = 0;
-        printf("Enter the account number (must be exactly 10 digits): ");
+        printf(CYAN "Enter the account number (must be exactly 10 digits): " RESET);
         scanf("%s", num);
 
         // Check length
         if (strlen(num) != 10)
         {
-            printf("Invalid account number! Must be exactly 10 digits.\n");
+            printError("Invalid account number! Must be exactly 10 digits.\n");
             checkNum = 1;
             continue;
         }
@@ -513,7 +564,7 @@ void ADD(account** accs)
         {
             if(!isdigit(num[i]))
             {
-                printf("Invalid account number! Must contain only digits.\n");
+                printError("Invalid account number! Must contain only digits.\n");
                 checkNum = 1;
                 break;
             }
@@ -525,7 +576,7 @@ void ADD(account** accs)
         {
             if(strcmp(num, accs[i]->acc_number) == 0)
             {
-                printf("This account number already exists.\n");
+                printError("This account number already exists.\n");
                 checkNum = 1;
                 break;
             }
@@ -534,32 +585,32 @@ void ADD(account** accs)
     while(checkNum);
     while(getchar() != '\n');
 
-    printf("Enter name: ");
+    printf(CYAN "Enter name: " RESET);
     fgets(name, 50, stdin);
     name[strcspn(name, "\n")] = 0;
 
     do
     {
-        printf("Enter email: ");
+        printf(CYAN "Enter email: " RESET);
         fgets(address, 50, stdin);
         address[strcspn(address, "\n")] = 0;
 
         if(!validate_email(address))
         {
-            printf("Invalid email format!\n");
+            printError("Invalid email format!\n");
         }
     }
     while(!validate_email(address));
 
     do
     {
-        printf("Enter phone number (11 digits): ");
+        printf(CYAN "Enter phone number (11 digits): " RESET);
         fgets(phone, 15, stdin);
         phone[strcspn(phone, "\n")] = 0;
     }
     while(!validate_phone(phone));
 
-    printf("THE BALANCE:\n");
+    printf(CYAN "THE BALANCE:\n" RESET);
     balance = validate_amount();
     // Convert to string
     balance_str[20];
@@ -574,6 +625,7 @@ void ADD(account** accs)
     accs[numberOfAccounts] = new_acc;
     numberOfAccounts++;
 
+    printSuccess("Account added successfully!\n");
     SAVE(accs);
 
 
@@ -581,6 +633,9 @@ void ADD(account** accs)
 
 void DELETE(account** accs)
 {
+    printf(BOLD RED "\nDELETE ACCOUNT\n" RESET);
+    printf(RED "===============\n" RESET);
+
     int i = searchNum(accs);
     int j;
 
@@ -594,16 +649,19 @@ void DELETE(account** accs)
             {
                 accs[i+j]=accs[i+j+1];
             }
-
+            printSuccess("Account deleted successfully!\n");
         }
-        else printf("\nTHE ACCOUNT CANNOT BE DELETED , BALANCE = %.2f \n",accs[i]->balance);
+        else printError("THE ACCOUNT CANNOT BE DELETED, BALANCE NOT ZERO\n");
     }
-    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
+    else printError("THE ACCOUNT NUMBER IS NOT FOUND!\n");
 }
 
 
 void MODIFY(account** accs)
 {
+    printf(BOLD YELLOW "\nMODIFY ACCOUNT\n" RESET);
+    printf(YELLOW "===============\n" RESET);
+
     int i = searchNum(accs);
 
     if(i < numberOfAccounts)
@@ -617,7 +675,7 @@ void MODIFY(account** accs)
         while(getchar() != '\n');
 
         // Modify name
-        printf("Enter new name (or press Enter to keep current): ");
+        printf(CYAN "Enter new name (or press Enter to keep current): " RESET);
         char new_name[50];
         fgets(new_name, 50, stdin);
         new_name[strcspn(new_name, "\n")] = 0;
@@ -632,7 +690,7 @@ void MODIFY(account** accs)
         int phone_valid = 0;
         do
         {
-            printf("Enter new phone (or press Enter to keep current): ");
+            printf(CYAN "Enter new phone (or press Enter to keep current): " RESET);
             fgets(new_phone, 15, stdin);
             new_phone[strcspn(new_phone, "\n")] = 0;
 
@@ -648,7 +706,7 @@ void MODIFY(account** accs)
                 phone_valid = 1;
             }
             else
-                printf("Invalid phone number!\n");
+                printError("Invalid phone number!\n");
         }
         while(!phone_valid);
 
@@ -657,7 +715,7 @@ void MODIFY(account** accs)
         int email_valid = 0;
         do
         {
-            printf("Enter new email (or press Enter to keep current): ");
+            printf(CYAN "Enter new email (or press Enter to keep current): " RESET);
             fgets(new_email, 50, stdin);
             new_email[strcspn(new_email, "\n")] = 0;
 
@@ -673,67 +731,78 @@ void MODIFY(account** accs)
                 email_valid = 1;
             }
             else
-                printf("Invalid email format!\n");
+                printError("Invalid email format!\n");
 
         }
         while(!email_valid);
 
-        printf("\nAccount modified in memory!\n");
-
+        printSuccess("Account modified successfully!\n");
         SAVE(accs);
     }
 }
 
 void CHANGE_STATUS(account** accs)
 {
+    printf(BOLD MAGENTA "\nCHANGE ACCOUNT STATUS\n" RESET);
+    printf(MAGENTA "======================\n" RESET);
+
     int i = searchNum(accs);
     char x = 0;
 
     if(i<numberOfAccounts)
     {
-        printf("\nThe account status is %s , Are you sure want to change the current status? [y/n]:",statusOfAccount[accs[i]->status]);
+        printf(CYAN "The account status is %s, Are you sure want to change the current status? [y/n]:" RESET, statusOfAccount[accs[i]->status]);
         getchar();
         scanf("%c",&x);
         if(x == 'y' || x == 'Y')
         {
             (accs[i]->status)=((accs[i]->status)+1)%2;
-            printf("your status now is %s\n\n",statusOfAccount[accs[i]->status]);
+            printSuccess("Status changed successfully!\n");
+            printf("New status: %s\n", statusOfAccount[accs[i]->status]);
             SAVE(accs);
         }
-        if(x != 'y' && x != 'n' && x != 'Y' && x != 'N' )
+        else if(x == 'n' || x == 'N')
         {
-            printf("UNDEFINED CHOICE. ");
-            printf("your status now is %s\n\n",statusOfAccount[accs[i]->status]);
+            printWarning("Status change cancelled.\n");
+        }
+        else
+        {
+            printError("Invalid choice.\n");
         }
 
     }
-    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
+    else printError("THE ACCOUNT NUMBER IS NOT FOUND!\n");
 
 }
 
 
 void DAILYLIMIT(account** accs)
 {
+    printf(BOLD CYAN "\nDAILY LIMIT INFORMATION\n" RESET);
+    printf(CYAN "=========================\n" RESET);
+
     int i = searchNum(accs);
 
     if(i < numberOfAccounts)
     {
-        printf("\nDaily Limit Information \n");
         printf("Account: %s\n", accs[i]->acc_number);
         printf("Name: %s\n", accs[i]->name);
-        printf("Daily withdrawal limit: $50,000.00\n");
-        printf("Remaining daily limit: $%.2f\n", accs[i]->wlimit);
-        printf("Used today: $%.2f\n", 50000.0 - accs[i]->wlimit);
-        printf("Max per transaction: $10,000.00\n");
+        printf(GREEN "Daily withdrawal limit: $50,000.00\n" RESET);
+        printf(YELLOW "Remaining daily limit: $%.2f\n" RESET, accs[i]->wlimit);
+        printf(RED "Used today: $%.2f\n" RESET, 50000.0 - accs[i]->wlimit);
+        printf(CYAN "Max per transaction: $10,000.00\n" RESET);
     }
     else
     {
-        printf("\nAccount not found!\n");
+        printError("Account not found!\n");
     }
 }
 
 void WITHDRAW(account** accs)
 {
+    printf(BOLD RED "\nWITHDRAW MONEY\n" RESET);
+    printf(RED "===============\n" RESET);
+
     double withdraw;
     int i = searchNum(accs);
 
@@ -743,32 +812,36 @@ void WITHDRAW(account** accs)
         {
             if(accs[i]->wlimit > 0)
             {
-                printf("account balance is: %.2lf\n",accs[i]->balance);
-                printf("Amount to withdraw (max $10,000 per transaction): ");
-                withdraw=validate_amount();          //.!!!!EDITEDDD!!
-                if(withdraw>accs[i]->balance)printf("\nUNABLE TO WITHDRAW! YOUR BALANCE IS %.2f\n",accs[i]->balance);
-                else if(withdraw>accs[i]->wlimit)printf("\nUNABLE TO WITHDRAW! YOUR LIMIT FOR TODAY IS %.2f\n",accs[i]->wlimit);
-                else if(withdraw>10000.0)printf("\nUNABLE TO WITHDRAW! YOU ARE LIMITED WITH 10000.0$ IN A TRANSACTION\n");
+                printf(CYAN "Account balance: $%.2lf\n" RESET, accs[i]->balance);
+                printf(CYAN "Amount to withdraw (max $10,000 per transaction): " RESET);
+                withdraw=validate_amount();
+                if(withdraw>accs[i]->balance)printError("UNABLE TO WITHDRAW! INSUFFICIENT BALANCE\n");
+                else if(withdraw>accs[i]->wlimit)printError("UNABLE TO WITHDRAW! DAILY LIMIT EXCEEDED\n");
+                else if(withdraw>10000.0)printError("UNABLE TO WITHDRAW! MAX PER TRANSACTION IS $10,000\n");
                 else
                 {
                     accs[i]->balance-=withdraw;
                     accs[i]->wlimit-=withdraw;
 
                     record_transaction(accs[i],"withdrawed",withdraw);
-                    printf("withdrawal successful! New balance: $%.2f\n", accs[i]->balance);
+                    printSuccess("Withdrawal successful!\n");
+                    printf("New balance: $%.2f\n", accs[i]->balance);
                     SAVE(accs);
                 }
             }
 
         }
-        else printf("\nTHE ACCOUNT IS INACTIVE!\n");
+        else printError("THE ACCOUNT IS INACTIVE!\n");
     }
-    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
+    else printError("THE ACCOUNT NUMBER IS NOT FOUND!\n");
 
 }
 
 void DEPOSIT(account** accs)
 {
+    printf(BOLD GREEN "\nDEPOSIT MONEY\n" RESET);
+    printf(GREEN "==============\n" RESET);
+
     double amount;
     int i = searchNum(accs);
 
@@ -777,23 +850,23 @@ void DEPOSIT(account** accs)
         // Check if account is active, if not, ask for another account
         while(!accs[i]->status)
         {
-            printf("Cannot deposit to inactive account!\n");
+            printError("Cannot deposit to inactive account!\n");
             printf("Enter another account number\n");
             i = searchNum(accs);
 
             if(i >= numberOfAccounts)
             {
-                printf("Account not found!\n");
+                printError("Account not found!\n");
             }
         }
-        printf("account balance is: %.2lf\n",accs[i]->balance);
+        printf(CYAN "Account balance: $%.2lf\n" RESET, accs[i]->balance);
         do
         {
-            printf("Amount to deposit (max $10,000 per transaction): ");
+            printf(CYAN "Amount to deposit (max $10,000 per transaction): " RESET);
             amount=validate_amount();
 
             if(amount > 10000.0)
-                printf("Cannot deposit more than $10,000 per transaction!\n");
+                printError("Cannot deposit more than $10,000 per transaction!\n");
         }
         while(amount > 10000.0);
 
@@ -801,7 +874,8 @@ void DEPOSIT(account** accs)
 
         record_transaction(accs[i], "deposited", amount);
 
-        printf("Deposit successful! New balance: $%.2f\n", accs[i]->balance);
+        printSuccess("Deposit successful!\n");
+        printf("New balance: $%.2f\n", accs[i]->balance);
         SAVE(accs);
     }
 
@@ -809,6 +883,9 @@ void DEPOSIT(account** accs)
 
 void TRANSFER(account** accs)
 {
+    printf(BOLD MAGENTA "\nTRANSFER MONEY\n" RESET);
+    printf(MAGENTA "===============\n" RESET);
+
     double amount;
     int i, j;
     int validS = 0, validR = 0;
@@ -819,22 +896,22 @@ void TRANSFER(account** accs)
     {
         validS = 1;
 
-        printf("\nSENDER ACCOUNT:\n");
+        printf(CYAN "\nSENDER ACCOUNT:\n" RESET);
         i = searchNum(accs);
 
         if(i >= numberOfAccounts) {
-            printf("Sender account not found!\n");
+            printError("Sender account not found!\n");
             validS = 0;
             continue;
         }
 
         if(!accs[i]->status) {
-            printf("Sender account is INACTIVE!\n");
+            printError("Sender account is INACTIVE!\n");
             validS = 0;
         }
 
         if(accs[i]->wlimit <= 0) {
-            printf("Daily withdrawal limit reached!\n");
+            printError("Daily withdrawal limit reached!\n");
             printf("Remaining: $%.2f\n", accs[i]->wlimit);
             validS = 0;
         }
@@ -845,19 +922,19 @@ void TRANSFER(account** accs)
     do
     {
         validR = 1;
-        printf("\nRECEIVER ACCOUNT:\n");
+        printf(CYAN "\nRECEIVER ACCOUNT:\n" RESET);
         j = searchNum(accs);
         if(j >= numberOfAccounts) {
-            printf("Receiver account not found!\n");
+            printError("Receiver account not found!\n");
             validR = 0;
             continue;
         }
         if(!accs[j]->status) {
-            printf("Receiver account is INACTIVE!\n");
+            printError("Receiver account is INACTIVE!\n");
             validR = 0;
         }
         if(i == j) {
-            printf("Cannot transfer to same account!\n");
+            printError("Cannot transfer to same account!\n");
             validR = 0;
         }
 
@@ -870,23 +947,25 @@ void TRANSFER(account** accs)
     printf("Daily limit remaining: $%.2f\n", accs[i]->wlimit);
 
     // Get transfer amount
-        printf("\nEnter transfer amount: $");
+        printf(CYAN "\nEnter transfer amount: $" RESET);
         amount = validate_amount();
 
         if(amount > 10000.0) {
-            printf("Max $10,000 per transaction!\n");
+            printError("Max $10,000 per transaction!\n");
              amount = validate_amount();
 
         }
 
         else if (amount > accs[i]->balance) {
-            printf("Insufficient balance! Available: $%.2f\n", accs[i]->balance);
+            printError("Insufficient balance!\n");
+            printf("Available: $%.2f\n", accs[i]->balance);
             amount = validate_amount();
 
         }
 
         else if(amount > accs[i]->wlimit) {
-            printf("Exceeds daily limit! Remaining: $%.2f\n", accs[i]->wlimit);
+            printError("Exceeds daily limit!\n");
+            printf("Remaining: $%.2f\n", accs[i]->wlimit);
             amount = validate_amount();}
 
     // Perform transfer
@@ -898,7 +977,7 @@ void TRANSFER(account** accs)
     record_transaction(accs[i], "transferred(sent)", amount);
     record_transaction(accs[j], "transferred(received)", amount);
 
-    printf("\nTransfer successful!\n");
+    printSuccess("Transfer successful!\n");
     printf("New balances:\n");
     printf("Sender: $%.2f\n", accs[i]->balance);
     printf("Receiver: $%.2f\n", accs[j]->balance);
@@ -990,17 +1069,18 @@ void PRINT(account** accs)
 {
     if(numberOfAccounts == 0)
     {
-        printf("No accounts to display!\n");
+        printError("No accounts to display!\n");
         return;
     }
-    printf("========================================\n");
-    printf("|       Sort Accounts By                |\n");
-    printf("========================================\n");
-    printf("|     1. Name (A-Z)                     |\n");
-    printf("|     2. Balance (highest to lowest)    |\n");
-    printf("|     3. Date Opened (oldest to newest) |\n");
-    printf("========================================\n");
-    printf("      Enter choice: \n");
+
+    printf(BOLD CYAN "\n========================================\n" RESET);
+    printf(BOLD CYAN "|       Sort Accounts By                |\n" RESET);
+    printf(BOLD CYAN "========================================\n" RESET);
+    printf(CYAN "|     1. Name (A-Z)                     |\n" RESET);
+    printf(CYAN "|     2. Balance (highest to lowest)    |\n" RESET);
+    printf(CYAN "|     3. Date Opened (oldest to newest) |\n" RESET);
+    printf(BOLD CYAN "========================================\n" RESET);
+    printf(YELLOW "      Enter choice: " RESET);
 
     int choice;
     scanf("%d", &choice);
@@ -1016,18 +1096,18 @@ void PRINT(account** accs)
     {
     case 1:
         sortByName(temp_accs, numberOfAccounts);
-        printf("\nAccounts Sorted by Name \n");
+        printf(BOLD GREEN "\nAccounts Sorted by Name\n" RESET);
         break;
     case 2:
         sortByBalance(temp_accs, numberOfAccounts);
-        printf("\nAccounts Sorted by Balance\n");
+        printf(BOLD GREEN "\nAccounts Sorted by Balance\n" RESET);
         break;
     case 3:
         sortByDate(temp_accs, numberOfAccounts);
-        printf("\nAccounts Sorted by Date Opened \n");
+        printf(BOLD GREEN "\nAccounts Sorted by Date Opened\n" RESET);
         break;
     default:
-        printf("Invalid choice!\n");
+        printError("Invalid choice!\n");
         free(temp_accs);
         return;
     }
@@ -1044,15 +1124,17 @@ void PRINT(account** accs)
 
 void REPORT(account** accs)
 {
+    printf(BOLD MAGENTA "\nTRANSACTION REPORT\n" RESET);
+    printf(MAGENTA "===================\n" RESET);
+
     int i = searchNum(accs), j;
     char* lines[1000];
     char buffer[200];
     int count = 0;
 
-    if(i<numberOfAccounts)
-    {
+    if(i<numberOfAccounts){
         FILE* f=fopen(accs[i]->filetrans,"r");
-        if(!f)printf("THE ACCOUNT HAS NO TRANSACTIONS!\n");
+        if(!f)printf(YELLOW "THE ACCOUNT HAS NO TRANSACTIONS!\n" RESET);
 
         while(fgets(buffer,190,f))
         {
@@ -1065,38 +1147,39 @@ void REPORT(account** accs)
 
         if(count>5)
         {
-            printf("\n==============================================================\n");
-            printf("|                             REPORT                          |\n");
-            printf("===============================================================\n");
+            printf(BOLD CYAN "\n==============================================================\n" RESET);
+            printf(CYAN "|                             REPORT                          |\n" RESET);
+            printf(BOLD CYAN "==============================================================\n" RESET);
             for(j=count-1; j>=count-5; j--)
             {
-                printf("- %s \n",lines[j]);
+                printf(GREEN "- %s \n" RESET,lines[j]);
             }
-            printf("===============================================================\n");
+            printf(BOLD CYAN "==============================================================\n" RESET);
         }
         else
         {
-            printf("\n================================================================\n");
-            printf("|                              REPORT                          |\n");
-            printf("================================================================\n");
+            printf(BOLD CYAN "\n================================================================\n" RESET);
+            printf(CYAN "|                              REPORT                          |\n" RESET);
+            printf(BOLD CYAN "================================================================\n" RESET);
             for(j=count-1; j>=0; j--)
             {
-                printf("- %s \n",lines[j]);
+                printf(GREEN "- %s \n" RESET,lines[j]);
             }
-            printf("================================================================\n");
+            printf(BOLD CYAN "================================================================\n" RESET);
         }
     }
-    else printf("\nTHE ACCOUNT NUMBER IS NOT FOUND!\n");
+    else printError("THE ACCOUNT NUMBER IS NOT FOUND!\n");
 
 }
 //BONUS
 void DELETEMULTIPLE(account** accs)
 {
     int option;
-    printf("\nDELETE MULTIPLE ACCOUNTS\n");
-    printf("1. By Date \n");
-    printf("2. Inactive Accounts (>90 days)\n");
-    printf("Enter option: ");
+    printf(BOLD RED "\nDELETE MULTIPLE ACCOUNTS\n" RESET);
+    printf(RED "========================\n" RESET);
+    printf(CYAN "1. By Date \n" RESET);
+    printf(CYAN "2. Inactive Accounts (>90 days)\n" RESET);
+    printf(YELLOW "Enter option: " RESET);
     scanf("%d", &option);
 
     while(getchar() != '\n');
@@ -1106,7 +1189,7 @@ void DELETEMULTIPLE(account** accs)
         char date_input[8];
         int year, month;
 
-        printf("Enter date (YYYY-MM): ");
+        printf(CYAN "Enter date (YYYY-MM): " RESET);
         scanf("%7s", date_input);
 
         // Parse date
@@ -1119,8 +1202,8 @@ void DELETEMULTIPLE(account** accs)
         int total_count = 0;
         int has_active = 0;
 
-        printf("\nAccounts to delete from %d-%02d:\n", year, month);
-        printf("================================\n");
+        printf(YELLOW "\nAccounts to delete from %d-%02d:\n" RESET, year, month);
+        printf(YELLOW "================================\n" RESET);
 
         for(int i = 0; i < numberOfAccounts; i++)
         {
@@ -1134,13 +1217,13 @@ void DELETEMULTIPLE(account** accs)
                        statusOfAccount[accs[i]->status],
                        accs[i]->balance);
                 printf("   Email: %s\n", accs[i]->address);
-                printf("--------------------------------\n");
+                printf(YELLOW "--------------------------------\n" RESET);
             }
         }
 
         if(total_count == 0)
         {
-            printf("No accounts found from %d-%02d\n", year, month);
+            printf(RED "No accounts found from %d-%02d\n" RESET, year, month);
             return;
         }
 
@@ -1148,19 +1231,19 @@ void DELETEMULTIPLE(account** accs)
         char confirm;
         if(has_active)
         {
-            printf("\n  WARNING: Some accounts are ACTIVE!\n");
-            printf("Delete these %d account(s)? (y/n): ", total_count);
+            printWarning("\nWARNING: Some accounts are ACTIVE!\n");
+            printf(YELLOW "Delete these %d account(s)? (y/n): " RESET, total_count);
         }
         else
         {
-            printf("\nDelete these %d account(s)? (y/n): ", total_count);
+            printf(YELLOW "\nDelete these %d account(s)? (y/n): " RESET, total_count);
         }
 
         scanf(" %c", &confirm);
 
         if(confirm != 'y' && confirm != 'Y')
         {
-            printf("Deletion cancelled\n");
+            printWarning("Deletion cancelled\n");
             return;
         }
 
@@ -1171,7 +1254,7 @@ void DELETEMULTIPLE(account** accs)
         {
             if(accs[i]->dateOpened.year == year && accs[i]->dateOpened.mon == month)
             {
-                printf("Deleting: %s - %s\n", accs[i]->acc_number, accs[i]->name);
+                printf(RED "Deleting: %s - %s\n" RESET, accs[i]->acc_number, accs[i]->name);
                 destruct_acc(accs[i]);
 
                 // Shift remaining accounts
@@ -1186,7 +1269,7 @@ void DELETEMULTIPLE(account** accs)
             }
         }
 
-        printf(" Deleted %d account(s)\n", deleted_count);
+        printSuccess("Deleted %d account(s)\n");
         SAVE(accs);
     }
     else if(option == 2) // Delete inactive accounts
@@ -1194,8 +1277,8 @@ void DELETEMULTIPLE(account** accs)
         date today = localTime();
         int total_count = 0;
 
-        printf("\nInactive accounts (>90 days, zero balance):\n");
-        printf("============================================\n");
+        printf(YELLOW "\nInactive accounts (>90 days, zero balance):\n" RESET);
+        printf(YELLOW "============================================\n" RESET);
 
         // First pass: show accounts to delete
         for(int i = 0; i < numberOfAccounts; i++)
@@ -1215,25 +1298,25 @@ void DELETEMULTIPLE(account** accs)
                     printf("   Date opened: %s %d\n",
                            months[accs[i]->dateOpened.mon],
                            accs[i]->dateOpened.year);
-                    printf("--------------------------------\n");
+                    printf(YELLOW "--------------------------------\n" RESET);
                 }
             }
         }
 
         if(total_count == 0)
         {
-            printf("No inactive accounts found (>90 days with zero balance)\n");
+            printf(GREEN "No inactive accounts found (>90 days with zero balance)\n" RESET);
             return;
         }
 
         // Ask for confirmation
         char confirm;
-        printf("\nDelete these %d inactive account(s)? (y/n): ", total_count);
+        printf(YELLOW "\nDelete these %d inactive account(s)? (y/n): " RESET, total_count);
         scanf(" %c", &confirm);
 
         if(confirm != 'y' && confirm != 'Y')
         {
-            printf("Deletion cancelled\n");
+            printWarning("Deletion cancelled\n");
             return;
         }
 
@@ -1249,12 +1332,11 @@ void DELETEMULTIPLE(account** accs)
 
                 if(months_since >= 3)
                 {
-                    printf("Deleting: %s - %s\n", accs[i]->acc_number, accs[i]->name);
+                    printf(RED "Deleting: %s - %s\n" RESET, accs[i]->acc_number, accs[i]->name);
                     destruct_acc(accs[i]);
 
                     // Shift remaining accounts
                     for(int j = i; j < numberOfAccounts - 1; j++)
-
                         accs[j] = accs[j + 1];
 
                     numberOfAccounts--;
@@ -1264,45 +1346,48 @@ void DELETEMULTIPLE(account** accs)
             }
         }
 
-        printf("Deleted %d inactive account(s)\n", deleted_count);
+        printSuccess("Deleted %d inactive account(s)\n");
         SAVE(accs);
     }
     else
     {
-        printf("Invalid option\n");
-        printf("\nPress Enter to return to main menu...");
+        printError("Invalid option\n");
+        printf(YELLOW "\nPress Enter to return to main menu..." RESET);
     }
 }
 void QUIT(account** accs)
 {
+    printf(BOLD BLUE "\n===========================================\n" RESET);
+    printf(BLUE "            EXITING BANKING SYSTEM           \n" RESET);
+    printf(BOLD BLUE "===========================================\n" RESET);
     SAVE(accs);
-    printf("SEE YOU LATER ...\n");
+    printSuccess("SEE YOU LATER ...\n");
     exit(0);
 }
 
 void displayMenu()
 {
     printf("\n");
-    printf(" ============================================\n");
-    printf("|        BANK MANAGEMENT SYSTEM             |\n");
-    printf(" ============================================\n");
-    printf("|    1.  ADD Account                        |\n");
-    printf("|    2.  DELETE Account                     |\n");
-    printf("|    3.  MODIFY Account                     |\n");
-    printf("|    4.  SEARCH Account                     |\n");
-    printf("|    5.  ADVANCED SEARCH                    |\n");
-    printf("|    6.  CHANGE STATUS                      |\n");
-    printf("|    7.  DAILY LIMIT Check                  |\n");
-    printf("|    8.  WITHDRAW                           |\n");
-    printf("|    9.  DEPOSIT                            |\n");
-    printf("|    10. TRANSFER                           |\n");
-    printf("|    11. REPORT (Last 5 transactions)       |\n");
-    printf("|    12. PRINT (Sorted accounts)            |\n");
-    printf("|    13. SAVE to file                       |\n");
-    printf("|    14. DELETE multiple                     |\n");
-    printf("|    15. QUIT                               |\n");
-    printf(" ============================================\n");
-    printf("\n Enter your choice (1-15): ");
+    printf(BOLD BLUE " ============================================\n" RESET);
+    printf(BOLD BLUE "|        BANK MANAGEMENT SYSTEM             |\n" RESET);
+    printf(BOLD BLUE " ============================================\n" RESET);
+    printf(CYAN "|    1.  ADD Account                        |\n" RESET);
+    printf(CYAN "|    2.  DELETE Account                     |\n" RESET);
+    printf(CYAN "|    3.  MODIFY Account                     |\n" RESET);
+    printf(CYAN "|    4.  SEARCH Account                     |\n" RESET);
+    printf(CYAN "|    5.  ADVANCED SEARCH                    |\n" RESET);
+    printf(CYAN "|    6.  CHANGE STATUS                      |\n" RESET);
+    printf(CYAN "|    7.  DAILY LIMIT Check                  |\n" RESET);
+    printf(CYAN "|    8.  WITHDRAW                           |\n" RESET);
+    printf(CYAN "|    9.  DEPOSIT                            |\n" RESET);
+    printf(CYAN "|    10. TRANSFER                           |\n" RESET);
+    printf(CYAN "|    11. REPORT (Last 5 transactions)       |\n" RESET);
+    printf(CYAN "|    12. PRINT (Sorted accounts)            |\n" RESET);
+    printf(CYAN "|    13. SAVE to file                       |\n" RESET);
+    printf(CYAN "|    14. DELETE multiple                    |\n" RESET);
+    printf(CYAN "|    15. QUIT                               |\n" RESET);
+    printf(BOLD BLUE " ============================================\n" RESET);
+    printf(YELLOW "\n Enter your choice (1-15): " RESET);
 }
 
 void MENU(account** accs)
@@ -1378,14 +1463,14 @@ void MENU(account** accs)
             QUIT(accs);
             break;
         default:
-            printf("Invalid choice! Press Enter to continue...\n");
+            printError("Invalid choice! Press Enter to continue...\n");
             getchar(); // Wait for Enter
         }
 
         // Pause after each operation (except QUIT)
         if(choice != 15)
         {
-            printf("\nPress Enter to return to main menu...");
+            printf(YELLOW "\nPress Enter to return to main menu..." RESET);
             while(getchar() != '\n'); // Wait for Enter
         }
 
