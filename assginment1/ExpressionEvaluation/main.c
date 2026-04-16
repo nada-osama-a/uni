@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <math.h>
 typedef struct Node {
     float data;
     struct Node* next;
@@ -92,8 +92,57 @@ void display(Stack* s)
         printf("%.3f\n",temp->data);
         temp=temp->next;
     }
-
 }
+int priorty(char c)
+{
+    switch(c)
+    {
+        case '^':
+            return 4;
+        case '*':
+        case '/':
+        case '%':
+            return 3;
+        case '+':
+        case '-':
+            return 2;
+        default:
+            return 0;
+    }
+}
+
+//  Check right associativity (deepseek ely aly 3aleha)   :)
+int isRightAssociative(char op) {
+    return (op == '^');
+}
+float evaluate(char x, float op1, float op2) {
+    switch(x) {
+        case '+':
+            return op1 + op2;
+        case '-':
+            return op1 - op2;
+        case '*':
+            return op1 * op2;
+        case '/':
+            if (op2 == 0) {
+                printf("Error: Division by zero!\n");
+                return 0;
+            }
+            return op1 / op2;
+        case '%':
+            if (op2 == 0) {
+                printf("Error: Modulus by zero!\n");
+                return 0;
+            }
+            return fmod(op1, op2);
+        case '^':
+            return pow(op1, op2);
+        default:
+            printf("Error: Unknown operator %c\n", x);
+            return 0;
+    }
+}
+
 
 
 int main()
