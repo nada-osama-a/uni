@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1776373347 source:c:\users\nadah\onedrive\desktop\ass_term_4\datastructure\ds1\assginment1\expressionevaluation\main.c
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	<string.h>
+	<ctype.h>
+
