@@ -143,6 +143,86 @@ float evaluate(char x, float op1, float op2) {
     }
 }
 
+int isoperand(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+int isoperator(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '^';
+}
+
+
+//convert a infix expression to postfix expression
+/*pesudo code:
+---isoperand(); 
+---isoperator();
+---precedence();
+empty stack
+output string
+check each token scan from left to write
+if tooken is operand add it to output string
+if ( push int stack 
+if) pop from stack until ( if found
+if token is operator pop from stack to the ouput if they have higher or equal precedence than the token
+then push the token to stack
+at the end pop all remaining operator from stack to output
+
+*/
+char*infixTopostfix(char*infix)
+{
+Stack*operatorstack=initialize();//this function from helper.c elmafrood 
+char*postfix=(char*)malloc(sizeof(char));  //el mafrood in helper.c bardo 
+int i,j=0;
+for(i=0;infix[i]!='\0';i++) //loop over infix to scan it
+{
+    if(isoperand(infix[i]))
+    {
+        //add it to the postfix string
+       while(isoperand(infix[i])||infix[i]=='.')
+       {
+        postfix[j++]=infix[i++];
+       }
+       postfix[j++]=' '; //add space after each operand to separate them in the output string
+       i--; //decrement i to recheck the last character which is not an operand 
+
+    }
+    else if(infix[i]=='(')
+    {
+        push(operatorstack,infix[i]);
+
+    }
+    else if(infix[i]==')')
+    {
+        while(!isEmpty(operatorstack)&&peek(operatorstack)!='(')
+        {
+            postfix[j++]=pop(operatorstack);
+        }
+        //pop the '(' from stack
+        pop(operatorstack);
+    }
+    else if(isoperator(infix[i]))
+    { 
+        while(!isEmpty(operatorstack)&&
+        peek(operatorstack)!='('&&
+        (priorty(peek(operatorstack))>=priorty(infix[i]))||(priorty(peek(operatorstack))==priorty(infix[i]))&&!isRightAssociative(infix[i]))
+        {  //pop to the output then push the current operator to the stack
+            postfix[j++]=pop(operatorstack);
+            postfix[j++]=' ';
+        }
+        push(operatorstack,infix[i]);
+    }
+
+    }
+
+    while(!isEmpty(operatorstack))
+    {
+        postfix[j++]=pop(operatorstack);
+        postfix[j++] = ' ';
+    }
+    postfix[j]='\0';//to make it a string
+
+return postfix;
+
+}
 
 
 int main()
@@ -153,5 +233,8 @@ int main()
     push(s,3);
     printf("%.2f\n\n",pop(s));
     display(s);*/
+    char*exp_converted=infixTopostfix("3+4*2/(1-5)");
+    printf("Postfix expression: %s\n", exp_converted);
+    
     return 0;
 }
