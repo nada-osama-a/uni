@@ -47,4 +47,4 @@ function [fs, t_start, t_end, breakpoints] = get_user_input()
     fprintf('Time range: %.1f to %.1f seconds\n', t_start, t_end);
     fprintf('Breakpoints: ');
     disp(breakpoints);
-end
+end 
