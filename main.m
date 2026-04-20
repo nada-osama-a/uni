@@ -95,9 +95,135 @@ xlabel('Time (seconds)');
 ylabel('Amplitude');
 title('Generated Piecewise Signal');
 grid on;
-legend('Signal', 'Breakpoints', 'Location', 'best');
+if ~isempty(breakpoints)
+    legend('Signal', 'Breakpoints', 'Location', 'best');
+else
+    legend('Signal', 'Location', 'best');
+end
 
 fprintf('\n=== Signal Generated Successfully ===\n');
+
+%----------Generate random signals ----------
+fprintf('\n========================================\n');
+fprintf('  GENERATING 10 RANDOM SIGNALS          \n');
+fprintf('========================================\n\n');
+
+% Create folder to save figures
+if ~exist('Auto_Generated_Signals', 'dir')
+    mkdir('Auto_Generated_Signals');
+end
+%generate 10 automatic signals
+for auto_num=1:10
+    fprintf('Auto generate signal %d/10...\n',auto_num)
+    %    1-time parameter 
+    t_auto=t_start: 1/fs :t_end;
+     %   2-random breakpoints
+     num_randbp=randi([0,4]);
+     if num_randbp> 0
+         % rand() generate num between 0:1
+         %t_end - t_start --> range of signal(*)to convert number from
+         %[0,1] to [0,range(lenght)
+         breakpoints_auto=t_start+(t_end-t_start)*rand(1,num_randbp);
+         breakpoints_auto=sort(breakpoints_auto);
+     else
+         breakpoints_auto=[];
+     end
+     %   3-define regions
+     boundries_auto=[t_start,breakpoints_auto,t_end];
+     num_randregions=length(boundries_auto)-1;
+
+     %   4-initilaze signal
+     y_auto=zeros(size(t_auto));
+
+     % 5- generate each region automatically
+     for  region=1:num_randregions
+         region_start=boundries_auto(region);
+         region_end=boundries_auto(region+1);
+  %mask for this region AUTOMATIC
+         if region==num_randregions
+             mask=(t_auto>=region_start)&(t_auto<=region_end);
+         else
+             mask=(t_auto>=region_start)&(t_auto<region_end);
+         end
+
+
+       t_region_auto=t_auto(mask);
+ %signal type random from 1-7
+       type_auto=randi([1,7]);
+switch type_auto
+    case 1 %DC
+        A=10*(rand()-0.5);
+        y_region_auto=A*ones(size(t_region_auto));
+       
+    case 2 %Ramp
+        m=10*(rand()-0.5);
+        b=10*(rand()-0.5);
+        y_region_auto=m*t_region_auto+b;
+    case 3 % Polynomail
+        order=randi([1,2]);
+        A=5*(rand()-0.5);
+        intercept=5*(rand()-0.5);
+        y_region_auto=A*(t_region_auto.^order)+intercept;
+
+    case 4 % Exp
+        amp = 5 * rand();
+        exponent = 2 * (rand() - 0.5);
+        y_region_auto = amp * exp(exponent * t_region_auto);
+
+    case 5 %sinusoidal
+        amp=5*rand();
+        freq=randi([1,5]);
+        y_region_auto=amp*sin(2*pi*freq*t_region_auto);
+       
+    case 6 %Gaussian
+           amp=5*rand();
+           mean=region_start+(region_end-region_start)*rand();
+           width=(region_end-region_start)/(3+5*rand());
+           y_region_auto = amp * exp(-(t_region_auto - mean).^2 / (2 * width^2));
+
+    case 7 %Sawtooth
+          amp=5*rand();
+          freq=randi([1,5]);
+          y_region_auto = amp * (2 * (freq * t_region_auto - floor(freq * t_region_auto + 0.5)));
+end
+y_auto(mask)=y_region_auto;
+
+     end
+%6- plot and save
+figure('Position',[100, 100, 1000, 500]);
+plot(t_auto,y_auto,'b-','LineWidth',1.5);
+hold on;
+
+%mark breakpoints
+for bp=breakpoints_auto
+    xline(bp,'r--','LineWidth',1);
+end
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title(sprintf('Auto-Generated Signal %d/%d (fs=%.1fHz, %d regions)', auto_num, 10, fs, num_randregions));
+    grid on;
+    %mark only if break points exits
+if ~isempty(breakpoints_auto)
+    for bp = breakpoints_auto
+        xline(bp, 'r--', 'LineWidth', 1);
+    end
+    legend('Signal', 'Breakpoints', 'Location', 'best');
+else
+    legend('Signal', 'Location', 'best');
+end
+    filename = sprintf('auto_Generated_Signals/Signal_%02d.png', auto_num);
+    saveas(gcf, filename);
+    
+    % Close figure to save memory
+    close(gcf);
+
+
+end
+fprintf('\n================================================\n');
+fprintf('  COMPLETE! 10 signals saved in folder:        \n');
+fprintf('  "Auto_Generated_Signals"                     \n');
+fprintf('================================================\n');
+
 
 % ========================================================================
 % Function definition (put at the end or in separate file)
