@@ -136,10 +136,19 @@ while operation_running
             current_signal = k * current_signal;
             fprintf('Amplitude scaled by %.2f\n', k);
             
-        case 2 % Time reversal
-            current_signal = fliplr(current_signal);
-            current_t = -fliplr(current_t);
-            fprintf('Time reversal applied\n');
+        case 2 % Time reversal (manual)
+            % Reverse signal manually
+            temp_signal = current_signal;
+            for i = 1:length(current_signal)
+                current_signal(i) = temp_signal(length(current_signal) - i + 1);
+            end
+            
+    % Reverse time manually
+    temp_t = current_t;
+    for i = 1:length(current_t)
+        current_t(i) = -temp_t(length(current_t) - i + 1);
+    end
+    fprintf('Time reversal applied\n');
             
         case 3 % Time shift
             s = input('Shift value (s): ');
