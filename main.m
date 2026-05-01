@@ -330,6 +330,7 @@ end
 fprintf('\n================================================\n');
 fprintf('  COMPLETE! 10 signals saved in folder:        \n');
 fprintf('  "Auto_Generated_Signals"                     \n');
+fprintf('     End of program    \n ')
 fprintf('================================================\n');
 
 %% ========================================================================
