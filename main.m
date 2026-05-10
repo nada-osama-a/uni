@@ -1,387 +1,211 @@
+clear; close all; clc;
 
-clear all; close all; clc;
-fprintf('\n========================================\n');
-fprintf('    INTERACTIVE SIGNAL GENERATOR        \n');
-fprintf('========================================\n\n');
+fs_input = input('Enter Sampling Frequency (Hz) [Default 1000]: ', 's');
+if isempty(fs_input), fs = 1000; else fs = str2double(fs_input); end
 
-% Get user input
-[fs, t_start, t_end, breakpoints] = get_user_input();
+t_start_input = input('Enter Start Time [Default 0]: ', 's');
+if isempty(t_start_input), t_start = 0; else t_start = str2double(t_start_input); end
 
-% Create time vector
-t = t_start:1/fs:t_end;
-boundries = [t_start, breakpoints, t_end];
-num_regions = length(boundries) - 1;
+t_end_input = input('Enter End Time [Default 5]: ', 's');
+if isempty(t_end_input), t_end = 5; else t_end = str2double(t_end_input); end
+
+t = t_start : 1/fs : t_end;
+
+% Number and positions of breakpoints
+n_bps_input = input('Number of breakpoints [Default 0]: ', 's');
+if isempty(n_bps_input), n_bps = 0; else n_bps = str2double(n_bps_input); end
+
+bps = [];
+for i = 1:n_bps
+    bp_val = input(['  Position for Breakpoint ', num2str(i), ': ']);
+    bps = [bps, bp_val];
+end
+bps = sort(bps);
+
+% Define boundaries for regions
+boundaries = [t_start, bps, t_end];
+n_regions = length(boundaries) - 1;
 y = zeros(size(t));
 
-% Generate each region
-for i = 1:num_regions
-    region_start = boundries(i);
-    region_end = boundries(i+1);
-
-    if i == num_regions
-        mask = (t >= region_start) & (t <= region_end);
+% 2. SIGNAL GENERATION
+for i = 1:n_regions
+    t1 = boundaries(i);
+    t2 = boundaries(i+1);
+    
+    % interval masking to prevent overlaps
+    if i == n_regions
+        mask = (t >= t1) & (t <= t2);
     else
-        mask = (t >= region_start) & (t < region_end);
+        mask = (t >= t1) & (t < t2);
     end
-    t_region = t(mask);
     
-    fprintf('\nRegion %d: [%.2f to %.2f]\n', i, region_start, region_end);
+    t_reg = t(mask); 
     
-    % Display signal options
-    fprintf('\nAvailable signal types:\n');
-    fprintf('1. DC (amplitude)\n');
-    fprintf('2. Ramp (slope, intercept)\n');
-    fprintf('3. Polynomial (user-defined order - amplitude - intercept)\n');
-    fprintf('4. Exponential (amplitude, exponent)\n');
-    fprintf('5. Sinusoidal (amplitude, frequency)\n');
-    fprintf('6. Gaussian pulse (amplitude, mean, width)\n');
-    fprintf('7. Sawtooth wave (amplitude, frequency)\n');
-    type = input('\nChoose signal type (1-7): ');
+    fprintf('\n--- Region %d: [%.2f to %.2f] ---\n', i, t1, t2);
+    fprintf('1:DC, 2:Ramp, 3:Polynomial, 4:Exponential, 5:Sine, 6:Gaussian, 7:Sawtooth\n');
+    choice = input('Select Signal Type: ');
     
-    switch type
+    switch choice
         case 1 % DC
-            A = input('Amplitude = ');
-            y_region = A * ones(size(t_region));
-
+            A = input('  Amplitude: ');
+            y_reg = A * ones(size(t_reg));
         case 2 % Ramp
-            m = input('Slope = ');
-            b = input('Intercept = ');
-            y_region = m .* t_region + b;
-
+            m = input('  Slope: ');
+            c = input('  Intercept: ');
+            y_reg = m * t_reg + c;
         case 3 % Polynomial
-            order = input('Order = ');
-            A = input('Amplitude = ');
-            intercept = input('Intercept = ');
-            y_region = A .* (t_region.^order) + intercept;
-
-        case 4 % Exponential
-            amp = input('Amplitude = ');
-            exponent = input('Exponent = ');
-            y_region = amp .* exp(exponent .* t_region);
-
-        case 5 % Sinusoidal
-            amp = input('Amplitude = ');
-            freq = input('Frequency (Hz) = ');
-            y_region = amp .* sin(2*pi*freq .* t_region);
-
-        case 6 % Gaussian
-            amp = input('Enter amplitude = ');
-            mean_val = input('Enter mean (center time) = ');
-            width = input('Enter width (standard deviation) = ');
-            y_region = amp .* exp(-(t_region - mean_val).^2 / (2 * width.^2));
-
-        case 7 % Sawtooth
-            amp = input('Enter amplitude = ');
-            freq = input('Enter frequency (Hz) = ');
-            y_region = amp * (2 * (freq*t_region - floor(freq*t_region + 0.5)));
-
+            deg = input('  Degree: ');
+            A = input('  Amplitude: ');
+            y_reg = A * (t_reg.^deg);
+        case 4 % Exponential 
+            A = input('  Amplitude: ');
+            a = input('  Exponent: ');
+            y_reg = A * exp(a * t_reg);
+        case 5 % Sinusoidal 
+            A = input('  Amplitude: ');
+            f = input('  Freq (Hz): ');
+            y_reg = A * sin(2*pi*f * t_reg);
+        case 6 % Gaussian Pulse 
+            A = input('  Amplitude: ');
+            mean_v = input('  Mean: ');
+            width = input('  Width (Std Dev): ');
+            y_reg = A * exp(-(t_reg - mean_v).^2 / (2 * width^2));
+        case 7 % Sawtooth 
+            A = input('  Amplitude: ');
+            f = input('  Frequency: ');
+            y_reg = A * (2 * (f*t_reg - floor(f*t_reg + 0.5)));
         otherwise
-            fprintf('Invalid signal type\n');
-            y_region = zeros(size(t_region));
+            y_reg = zeros(size(t_reg));
     end
-    
-    % Store the generated signal
-    y(mask) = y_region;
+    y(mask) = y_reg; 
 end
 
-% Plot the final signal
-figure('Name', 'Generated Signal', 'Position', [100, 100, 1000, 500]);
+% Display final signal 
+figure('Name', 'Manual Piecewise Signal');
 plot(t, y, 'b-', 'LineWidth', 1.5);
-hold on;
-
-% Mark breakpoints
-for bp = breakpoints
-    xline(bp, 'r--', 'LineWidth', 1);
-end
-
-xlabel('Time (seconds)');
-ylabel('Amplitude');
+grid on; 
+xlabel('Time (s)'); 
+ylabel('Amplitude'); 
 title('Generated Piecewise Signal');
-grid on;
-if ~isempty(breakpoints)
-    legend('Signal', 'Breakpoints', 'Location', 'best');
-else
-    legend('Signal', 'Location', 'best');
-end
 
-fprintf('\n=== Signal Generated Successfully ===\n');
+% 3. SIGNAL OPERATIONS MENU 
+y_mod = y;
+t_mod = t;
+active = true;
 
-%% ========================================================================
-%% OPERATIONS MENU
-%% ========================================================================
-
-operation_running = true;
-current_signal = y;
-current_t = t;
-
-while operation_running
-    fprintf('\n========================================\n');
-    fprintf('        OPERATIONS MENU                  \n');
-    fprintf('========================================\n');
-    fprintf('1. Amplitude scaling\n');
-    fprintf('2. Time reversal\n');
-    fprintf('3. Time shift\n');
-    fprintf('4. Expansion (stretch in time)\n');
-    fprintf('5. Compression (squeeze in time)\n');
-    fprintf('6. Addition of random noise (by SNR)\n');
-    fprintf('7. Smoothing using moving average\n');
-    fprintf('8. None (exit operations)\n');
-    fprintf('========================================\n');
+while active
+    fprintf('\n--- Signal Operations ---\n');
+    fprintf('1:Scale, 2:Reverse, 3:Shift, 4:Expand, 5:Compress, 6:Noise, 7:Smooth, 8:Exit\n');
+    op = input('Choose Operation: ');
     
-    op_choice = input('Choose operation (1-8): ');
-    
-    switch op_choice
-        case 1 % Scaling
-            k = input('Scale factor: ');
-            current_signal = k * current_signal;
-            fprintf('Amplitude scaled by %.2f\n', k);
-            
-        case 2 % Time reversal (manual)
-            % Reverse signal manually
-            temp_signal = current_signal;
-            for i = 1:length(current_signal)
-                current_signal(i) = temp_signal(length(current_signal) - i + 1);
-            end
-            
-    % Reverse time manually
-    temp_t = current_t;
-    for i = 1:length(current_t)
-        current_t(i) = -temp_t(length(current_t) - i + 1);
-    end
-    fprintf('Time reversal applied\n');
-            
-        case 3 % Time shift
-            s = input('Shift value (s): ');
-            current_t = current_t + s;
-            fprintf('Time shifted by %.2f seconds\n', s);
-            
-        case 4 % Expansion
-            a = input('Expansion factor: ');
-            current_t = a * current_t;
-            fprintf('Time expanded by factor %.2f\n', a);
-            
-        case 5 % Compression
-            a = input('Compression factor: ');
-            current_t = current_t / a;
-            fprintf('Time compressed by factor %.2f\n', a);
-            
-        case 6 % Noise
-            snr = input('SNR (dB): ');
-            signal_power = mean(current_signal.^2);
-            noise_power = signal_power / (10^(snr/10));
-            noise = sqrt(noise_power) * randn(size(current_signal));
-            current_signal = current_signal + noise;
-            fprintf('Noise added with SNR = %.1f dB\n', snr);
-            
-        case 7 % Smoothing
-            M = input('Smoothing window length: ');
-            y_smooth = zeros(size(current_signal));
-            for n = 1:length(current_signal)
-                k1 = max(1, n - floor(M/2));
-                k2 = min(length(current_signal), n + floor(M/2));
-                y_smooth(n) = sum(current_signal(k1:k2)) / (k2 - k1 + 1);
-            end
-            current_signal = y_smooth;
-            fprintf('Smoothed with window size = %.0f\n', M);
-            
-        case 8 % None
-            fprintf('Exiting operations menu.\n');
-            
-        otherwise
-            fprintf('Invalid choice\n');
-    end
-    
-    % Plot updated signal after each operation (except exit)
-    if op_choice ~= 8
-        figure('Name', 'Signal After Operation', 'Position', [150, 150, 1000, 500]);
-        plot(current_t, current_signal, 'b-', 'LineWidth', 1.5);
-        xlabel('Time (seconds)');
-        ylabel('Amplitude');
-        title('Signal After Applied Operation');
-        grid on;
+    if op == 1 % Amplitude scaling 
+        k = input('  Scale Factor: ');
+        y_mod = k * y_mod;
         
-        % Ask if user wants to continue
-        cont = input('\nApply another operation? (1=Yes, 0=No): ');
-        if cont ~= 1
-            operation_running = false;
+    elseif op == 2 % Time reversal 
+        y_mod = y_mod(end:-1:1);
+        t_mod = -t_mod(end:-1:1);
+        
+    elseif op == 3 % Time shift 
+        sh = input('  Shift Value: ');
+        t_mod = t_mod + sh;
+        
+    elseif op == 4 % Expansion 
+        ex = input('  Expansion Factor: ');
+        t_mod = t_mod * ex;
+        
+    elseif op == 5 % Compression 
+        co = input('  Compression Factor: ');
+        t_mod = t_mod / co;
+        
+    elseif op == 6 % Addition of random noise 
+        snr_db = input('  SNR (dB): ');
+        sig_pwr = sum(y_mod.^2) / length(y_mod);
+        noise_pwr = sig_pwr / (10^(snr_db/10));
+        y_mod = y_mod + sqrt(noise_pwr) * randn(size(y_mod));
+        
+    elseif op == 7 % Smoothing (Moving Average) 
+        win = input('  Window Size: ');
+        temp_y = y_mod;
+        for n = 1:length(y_mod) 
+            idx1 = max(1, n - floor(win/2));
+            idx2 = min(length(y_mod), n + floor(win/2));
+            temp_y(n) = sum(y_mod(idx1:idx2)) / (idx2 - idx1 + 1);
         end
+        y_mod = temp_y;
+        
     else
-        operation_running = false;
+        active = false;
+    end
+    
+    if active && op ~= 8
+        figure;
+        plot(t_mod, y_mod, 'r-', 'LineWidth', 1.5);
+        grid on; 
+        title('Updated Signal After Operation');
+        xlabel('Time (s)'); 
+        ylabel('Amplitude');
     end
 end
 
-fprintf('\n=== Final Signal Ready ===\n');
+% 4. AUTOMATIC GENERATION (10 SIGNALS) 
+fprintf('\n--- Generating 10 Random Signals ---\n');
 
-fprintf('\n========================================\n');
-fprintf('  GENERATING 10 RANDOM SIGNALS          \n');
-fprintf('========================================\n\n');
-
-% Create folder to save figures
 if ~exist('Auto_Generated_Signals', 'dir')
     mkdir('Auto_Generated_Signals');
 end
 
-% Generate 10 automatic signals
-for auto_num = 1:10
-    fprintf('Auto generate signal %d/10...\n', auto_num)
+for n = 1:10
+    fprintf('  Generating signal %d/10...\n', n);
     
-    % Time parameter
     t_auto = t_start:1/fs:t_end;
-    
-    % Random breakpoints
-    num_randbp = randi([0,4]);
-    if num_randbp > 0
-        breakpoints_auto = t_start + (t_end - t_start) * rand(1, num_randbp);
-        breakpoints_auto = sort(breakpoints_auto);
-    else
-        breakpoints_auto = [];
-    end
-    
-    % Define regions
-    boundries_auto = [t_start, breakpoints_auto, t_end];
-    num_randregions = length(boundries_auto) - 1;
-    
-    % Initialize signal
     y_auto = zeros(size(t_auto));
     
-    % Generate each region automatically
-    for region = 1:num_randregions
-        region_start = boundries_auto(region);
-        region_end = boundries_auto(region+1);
+    % Random Breakpoints
+    n_bp_rand = randi([0, 4]);
+    bp_rand = sort(t_start + (t_end - t_start) * rand(1, n_bp_rand));
+    b_rand = [t_start, bp_rand, t_end];
+    
+    for r = 1:(length(b_rand)-1)
+        r1 = b_rand(r);
+        r2 = b_rand(r+1);
+        m_auto = (t_auto >= r1) & (t_auto <= r2);
+        tr = t_auto(m_auto);
         
-        % Mask for this region
-        if region == num_randregions
-            mask = (t_auto >= region_start) & (t_auto <= region_end);
-        else
-            mask = (t_auto >= region_start) & (t_auto < region_end);
-        end
+        type = randi([1, 7]);
         
-        t_region_auto = t_auto(mask);
-        
-        % Signal type random from 1-7
-        type_auto = randi([1,7]);
-        
-        switch type_auto
+        switch type
             case 1 % DC
-                A = 10 * (rand() - 0.5);
-                y_region_auto = A * ones(size(t_region_auto));
-                
+                yr = (10 * rand() - 5) * ones(size(tr));
             case 2 % Ramp
-                m = 10 * (rand() - 0.5);
-                b = 10 * (rand() - 0.5);
-                y_region_auto = m * t_region_auto + b;
-                
+                yr = (10 * rand() - 5) * tr + (10 * rand() - 5);
             case 3 % Polynomial
-                order = randi([1,2]);
-                A = 5 * (rand() - 0.5);
-                intercept = 5 * (rand() - 0.5);
-                y_region_auto = A * (t_region_auto.^order) + intercept;
-                
+                yr = (5 * rand() - 2.5) * (tr.^2);
             case 4 % Exponential
-                amp = 5 * rand();
-                exponent = 2 * (rand() - 0.5);
-                y_region_auto = amp * exp(exponent * t_region_auto);
-                
+                yr = rand() * exp((2*rand() - 1) * tr);
             case 5 % Sinusoidal
-                amp = 5 * rand();
-                freq = randi([1,5]);
-                y_region_auto = amp * sin(2*pi*freq * t_region_auto);
-                
+                yr = 5 * rand() * sin(2*pi*randi([1,5]) * tr);
             case 6 % Gaussian
-                amp = 5 * rand();
-                mean_val = region_start + (region_end - region_start) * rand();
-                width = (region_end - region_start) / (3 + 5 * rand());
-                y_region_auto = amp * exp(-(t_region_auto - mean_val).^2 / (2 * width^2));
-                
+                width = (r2 - r1) / (3 + 5*rand());
+                yr = exp(-(tr - (r1+r2)/2).^2 / (2 * width^2));
             case 7 % Sawtooth
-                amp = 5 * rand();
                 freq = randi([1,5]);
-                y_region_auto = amp * (2 * (freq * t_region_auto - floor(freq * t_region_auto + 0.5)));
+                yr = 2 * (freq*tr - floor(freq*tr + 0.5));
         end
-        
-        y_auto(mask) = y_region_auto;
+        y_auto(m_auto) = yr;
     end
     
-    % Plot and save
-    figure('Position', [100, 100, 1000, 500]);
+    % Plot and save 
+    figure('Position', [100, 100, 800, 400]);
     plot(t_auto, y_auto, 'b-', 'LineWidth', 1.5);
-    hold on;
-    
-    % Mark breakpoints
-    if ~isempty(breakpoints_auto)
-        for bp = breakpoints_auto
-            xline(bp, 'r--', 'LineWidth', 1);
-        end
-        legend('Signal', 'Breakpoints', 'Location', 'best');
-    else
-        legend('Signal', 'Location', 'best');
-    end
-    
-    xlabel('Time (seconds)');
-    ylabel('Amplitude');
-    title(sprintf('Auto-Generated Signal %d/%d (fs=%.1fHz, %d regions)', auto_num, 10, fs, num_randregions));
     grid on;
-    
-    filename = sprintf('Auto_Generated_Signals/Signal_%02d.png', auto_num);
-    saveas(gcf, filename);
+    title(['Auto-Generated Signal #', num2str(n)]);
+    xlabel('Time (s)');
+    ylabel('Amplitude');
+    saveas(gcf, ['Auto_Generated_Signals/Signal_', num2str(n), '.png']);
+    pause(1);
     close(gcf);
 end
 
-fprintf('\n================================================\n');
-fprintf('  COMPLETE! 10 signals saved in folder:        \n');
-fprintf('  "Auto_Generated_Signals"                     \n');
-fprintf('     End of program    \n ')
-fprintf('================================================\n');
-
-%% ========================================================================
-%% FUNCTION: GET USER INPUT
-%% ========================================================================
-
-function [fs, t_start, t_end, breakpoints] = get_user_input()
-
-    % Ask for sampling frequency
-    fs_input = input('Enter sampling frequency (Hz) [default 1000]: ', 's');
-    if isempty(fs_input)
-        fs = 1000;
-    else
-        fs = str2double(fs_input);
-    end
-    
-    % Ask for start time
-    start_input = input('Enter start time (seconds) [default 0]: ', 's');
-    if isempty(start_input)
-        t_start = 0;
-    else
-        t_start = str2double(start_input);
-    end
-    
-    % Ask for end time
-    end_input = input('Enter end time (seconds) [default 5]: ', 's');
-    if isempty(end_input)
-        t_end = 5;
-    else
-        t_end = str2double(end_input);
-    end
-    
-    % Ask for number of breakpoints
-    num_input = input('Enter number of breakpoints [default 0]: ', 's');
-    if isempty(num_input)
-        num_breakpoints = 0;
-    else
-        num_breakpoints = str2double(num_input);
-    end
-    
-    % Get breakpoint positions
-    breakpoints = [];
-    for i = 1:num_breakpoints
-        bp = input(sprintf('Enter breakpoint %d position (between %.1f and %.1f): ', i, t_start, t_end));
-        breakpoints = [breakpoints, bp];
-    end
-    breakpoints = sort(breakpoints);
-    
-    fprintf('\n--- Settings Confirmed ---\n');
-    fprintf('Sampling frequency: %.1f Hz\n', fs);
-    fprintf('Time range: %.1f to %.1f seconds\n', t_start, t_end);
-    fprintf('Breakpoints: ');
-    disp(breakpoints);
-end
+fprintf('  SUCCESS! 10 random signals saved in folder: \n');
+fprintf('  "Auto_Generated_Signals"\n');
