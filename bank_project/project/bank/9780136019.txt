@@ -1,0 +1,2 @@
+transfered(sent) 200.00, balance = 9800.54, 27-12-2025
+transfered(sent) 7.00, balance = 9793.54, 27-12-2025

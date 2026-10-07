@@ -1,0 +1,8 @@
+9780136019,Mohamed Ali,m.ali@gmail.com,9800.54,01254698321,12-2008,active
+9780135102,Omar Ahmed,omar@outlook.com,40000.73,01122553164,12-2015,active
+9780153252,mrat zaghlol zghalelo,youcantseeme@outlook.com,0.00,01122553164,12-2015,inactive
+1234567890,nada,nada@gmail.com,12317.80,12321313121,12-2025,active
+1234567888,waffle,waffle@gmail.com,0.00,11111222223,12-2025,inactive
+1223456789,mintgreen8ame2,aloo@123.d,0.00,12345678976,12-2025,active
+1234567866,atef,atefatofa@gmail.com,0.00,12121212121,12-2020,inactive
+1111111111,waffle,lilo@gmail.com,5555.00,12345678909,6-1999,active
